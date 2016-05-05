@@ -1,5 +1,5 @@
 require "ckafka/version"
-require 'ckafka/ckafka.bundle'
+require 'ckafka/ckafka'
 
 module Ckafka
 end
