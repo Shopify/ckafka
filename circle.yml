@@ -20,12 +20,8 @@ dependencies:
 
 test:
   override:
-    - bundle exec rake test:all
+    - bundle exec rake spec
 
 database:
   override:
     - echo "noop"
-
-notify:
-  webhooks:
-    - url: https://nexus.shopify.com/services/notifications/6d7a2ae7e7ecf6de837a2d8432661326/done
