@@ -1,0 +1,31 @@
+machine:
+  ruby:
+    version: 2.0.0
+  environment:
+    LD_LIBRARY_PATH: /usr/local/lib
+
+dependencies:
+  pre:
+    - make confluent/rest/start
+    - confluent/bin/kafka-topics --create --topic test.1  --partitions 1  --replication-factor 1 --zookeeper localhost
+    - >
+      git clone git@github.com:edenhill/librdkafka.git ~/librdkafka;
+      cd ~/librdkafka;
+      git reset --hard d5799beb5cc23459e7dd1ab25ea43d97c7a80aff;
+      ./configure;
+      make;
+      sudo make install
+  post:
+    - confluent/bin/kafka-topics --list --zookeeper localhost
+
+test:
+  override:
+    - bundle exec rake test:all
+
+database:
+  override:
+    - echo "noop"
+
+notify:
+  webhooks:
+    - url: https://nexus.shopify.com/services/notifications/6d7a2ae7e7ecf6de837a2d8432661326/done
