@@ -9,6 +9,54 @@
 
 static rd_kafka_t *rk = NULL;
 
+typedef struct _topic_cache_node {
+  char *name;
+  rd_kafka_topic_t *topic;
+  struct _topic_cache_node *next;
+} topic_cache_node;
+
+static topic_cache_node *topic_cache = NULL;
+
+static rd_kafka_topic_t* topic_for_name(const char *name)
+{
+  topic_cache_node *cur = topic_cache;
+
+  while(cur) {
+    if( strncmp(cur->name, name, 256) == 0 ) {
+      return cur->topic;
+    }
+
+    cur = cur->next;
+  }
+
+  topic_cache_node *t = malloc(sizeof(topic_cache_node));
+  t->name = strdup(name);
+  t->next = topic_cache;
+
+  rd_kafka_topic_conf_t *tc = rd_kafka_topic_conf_new();
+  t->topic = rd_kafka_topic_new(rk, name, tc);
+
+  topic_cache = t;
+
+  return t->topic;
+}
+
+static void clear_topic_cache(void)
+{
+  topic_cache_node *cur = topic_cache;
+
+  while( cur ) {
+    topic_cache_node *t = cur;
+    cur = t->next;
+
+    rd_kafka_topic_destroy(t->topic);
+    free(t->name);
+    free(t);
+  }
+
+  topic_cache = NULL;
+}
+
 static void error(const char *fmt, ...)
 {
   va_list args;
@@ -56,15 +104,8 @@ static VALUE kafka_send(VALUE self, VALUE topic_value, VALUE key, VALUE message)
   }
 
 
-  topic_conf = rd_kafka_topic_conf_new();
-  if(!topic_conf) {
-    rb_raise(rb_eStandardError, "failed to create kafka topic configuration");
-  }
-
-  topic = rd_kafka_topic_new(rk, topic_name, topic_conf);
-  if(!topic) {
-    rb_raise(rb_eStandardError, "failed to create topic");
-  }
+  topic = topic_for_name(topic_name);
+  assert(topic);
 
   res = rd_kafka_produce(topic, RD_KAFKA_PARTITION_UA, RD_KAFKA_MSG_F_COPY, message_bytes, message_len,
                          key_buf, key_len, NULL);
@@ -79,6 +120,7 @@ static VALUE kafka_send(VALUE self, VALUE topic_value, VALUE key, VALUE message)
 static VALUE kafka_destroy()
 {
   if(rk) {
+    clear_topic_cache();
     for(int i = 0 ; i < MAX_SHUTDOWN_TRIES; ++i) {
       if(!rd_kafka_outq_len(rk)) {
         break;
