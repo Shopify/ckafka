@@ -9,9 +9,12 @@ dependencies:
     - make confluent/rest/start
     - confluent/bin/kafka-topics --create --topic test.1  --partitions 1  --replication-factor 1 --zookeeper localhost
     - >
-      sudo add-apt-repository "deb http://us.archive.ubuntu.com/ubuntu trusty main universe";
-      sudo apt-get update;
-      sudo apt-get install librdkafka-dev=0.8.3-1ubuntu2;
+      git clone git@github.com:edenhill/librdkafka.git ~/librdkafka;
+      cd ~/librdkafka;
+      git reset --hard 0c15023708302c41a36e95f9650d69c453dfabba;
+      ./configure;
+      make;
+      sudo make install
   post:
     - confluent/bin/kafka-topics --list --zookeeper localhost
 
