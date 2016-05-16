@@ -79,7 +79,8 @@ static VALUE kafka_send(VALUE self, VALUE topic_value, VALUE key, VALUE message)
 static VALUE kafka_destroy()
 {
   if(rk) {
-    for(int i = 0 ; i < MAX_SHUTDOWN_TRIES; ++i) {
+    int i,res;
+    for(i = 0 ; i < MAX_SHUTDOWN_TRIES; ++i) {
       if(!rd_kafka_outq_len(rk)) {
         break;
       }
@@ -87,7 +88,7 @@ static VALUE kafka_destroy()
     }
 
     rd_kafka_destroy(rk);
-    int res = rd_kafka_wait_destroyed(100);
+    res = rd_kafka_wait_destroyed(100);
     if(res) {
       error("wait_destroyed returned: %d\n", res);
     }
