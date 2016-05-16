@@ -11,7 +11,7 @@ dependencies:
     - >
       git clone git@github.com:edenhill/librdkafka.git ~/librdkafka;
       cd ~/librdkafka;
-      git reset --hard d5799beb5cc23459e7dd1ab25ea43d97c7a80aff;
+      git reset --hard 0c15023708302c41a36e95f9650d69c453dfabba;
       ./configure;
       make;
       sudo make install
