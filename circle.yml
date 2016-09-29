@@ -1,20 +1,14 @@
 machine:
   ruby:
-    version: 2.0.0
+    version: 2.2.4
   environment:
-    LD_LIBRARY_PATH: /usr/local/lib
+    LD_LIBRARY_PATH: /usr/lib
 
 dependencies:
   pre:
+    - sudo apt-get install librdkafka-dev
     - make confluent/rest/start
     - confluent/bin/kafka-topics --create --topic test.1  --partitions 1  --replication-factor 1 --zookeeper localhost
-    - >
-      git clone git@github.com:edenhill/librdkafka.git ~/librdkafka;
-      cd ~/librdkafka;
-      git reset --hard 0c15023708302c41a36e95f9650d69c453dfabba;
-      ./configure;
-      make;
-      sudo make install
   post:
     - confluent/bin/kafka-topics --list --zookeeper localhost
 
